@@ -12,22 +12,24 @@ def operations_list():
     return content_list
 
 
-def list_date_5():
-    '''Возвращает список дат 5 последних операций'''
+def list_date():
+    '''Возвращает список отсортированных дат операций'''
     list_date = []
     for operation in operations_list():
         list_date.append(operation['date'])
 
     list_date.sort(reverse=True)
-    list_date_5 = list_date[:5]
-    return list_date_5
+    return list_date
 
+def list_executed_5():
+    '''Возвращает 5 последних успешных операций'''
+    list_executed_5 = []
+    for date in list_date():
+        for operation in operations_list():
+            if date == operation['date'] and operation['state'] == 'EXECUTED':
+                list_executed_5.append(operation)
+                if len(list_executed_5) == 5:
+                    return list_executed_5
 
-def last_operations_5():
-    '''Возвращает список 5 последних операций'''
-    last_operations_5 = []
-    for date in list_date_5():
-        for operations in operations_list():
-            if operations['date'] == date:
-                last_operations_5.append(operations)
-    return last_operations_5
+for line in list_executed_5():
+    print(line)
