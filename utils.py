@@ -31,11 +31,6 @@ def list_executed_5():
                     return list_executed_5
 
 
-# print(list_executed_5()[0])
-# print(list_executed_5()[1])
-# print(list_executed_5()[2])
-# print(list_executed_5()[3])
-# print(list_executed_5()[4])
 def end():
 
     for operations in list_executed_5():
