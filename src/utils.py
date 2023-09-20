@@ -1,72 +1,66 @@
 import json
+from datetime import datetime
 
-def operations_list():
-    '''Возвращает список всех непустых операций'''
-    f = open('operations.json', 'r', encoding='utf-8')
-    content = json.load(f)
-    f.close()
-    content_list = []
-    for operation in content:
-        if operation:
-            content_list.append(operation)
-    return content_list
+def read_operations_from_file(filename):
+    """Читает json файл и возвращает список операций."""
+    with open(filename, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        return data
 
+def filter_executed_operations(operations):
+    """Отбирает операции со статусом 'EXECUTED'."""
+    return [op for op in operations if 'state' in op and op['state'] == 'EXECUTED']
 
-def list_date():
-    '''Возвращает список отсортированных дат операций'''
-    list_date = []
-    for operation in operations_list():
-        list_date.append(operation['date'])
-    list_date.sort(reverse=True)
-    return list_date
+def get_last_n_operations(n, operations):
+    """Возвращает последние n операций."""
+    return list(reversed(operations))[:n]
 
-def list_executed_5():
-    '''Возвращает 5 последних успешных операций'''
-    list_executed_5 = []
-    for date in list_date():
-        for operation in operations_list():
-            if date == operation['date'] and operation['state'] == 'EXECUTED':
-                list_executed_5.append(operation)
-                if len(list_executed_5) == 5:
-                    return list_executed_5
+def mask_card_number(card_number):
+    '''
+    Функция маскирует данные карты, выводя первые 6 и последние 4 цифры
+    :param card_number:
+    :return:
+    '''
+    name_card, digits = card_number.split(' ')
+    if name_card != ' ':
+        return f'{name_card} {digits[:4]} {digits[:2]}** **** {digits[-4:]}'
+    else:
+        return f'{digits[:4]} {digits[:2]}** **** {digits[-4:]}'
 
+def print_operation(operation):
+    """Печатает одну операцию в желаемом формате."""
+    date_str = operation['date']
+    date = datetime.fromisoformat(date_str[:-1])
+    description = operation['description']
+    amount = float(operation['operationAmount']['amount'])
+    currency = str(operation['operationAmount']['currency']['name'])
+    account_from = operation.get('from')
+    account_to = operation['to']
 
-def end():
+    print(' ')
+    print(f"{date.strftime('%d.%m.%Y')} {description}")
+    if account_from:
+        card_from = mask_card_number(account_from)
+        print(f"{card_from} -> **{account_to[-4:]}")
+    else:
+        print(f"{mask_card_number(account_to)}")
+    print(f"{amount:.2f} {currency}")
 
-    for operations in list_executed_5():
-        #Выделение даты
-        date_time = operations['date'].split('T')
-        date = date_time[0].split('-')
-        #Первая строка
-        print(f'{date[2]}.{date[1]}.{date[0]}', end=' ')
-        print(operations['description'])
-        #Вторая строка
-        if 'from' in operations:
-            bank_score_from = operations['from'].split(' ')
-            bank_score_to = operations['to'].split(' ')
-            str_bank_score_from = ''
-            str_bank_score_to = ''
-            for item in bank_score_from:
-                if not item.isdigit():
-                    str_bank_score_from = str_bank_score_from + item
-                else:
-                    str_bank_score_from = str_bank_score_from + ' ' + item[:4] + ' ' + item[5:7] + '** **** ' + item[-4:]
+def print_last_operations(n, filename):
+    '''
+    Функция принимает на вход JSON файл, читает его и выводит 5 последних операций
+    по карте в формате
 
-            for item in bank_score_to:
-                if not item.isdigit():
-                    str_bank_score_to = str_bank_score_to + item
-                else:
-                    str_bank_score_to = f"{str_bank_score_to} **{item[-4:]}"
-            print(f"{str_bank_score_from} -> {str_bank_score_to}")
+    <дата перевода> <описание перевода>
+    <откуда> -> <куда>
+    <сумма перевода> <валюта>
 
-        else:
-            bank_score = operations['to'].split(' ')
-            for item in bank_score:
-                if item.isdigit():
-                    print('**', item[-4:], sep='')
-                else:
-                    print(item, end=' ')
-
-        #Третья строка
-        print(operations['operationAmount']['amount'], operations['operationAmount']['currency']['name'])
-        print()
+    :param n:
+    :param filename:
+    :return:
+    '''
+    operations = read_operations_from_file(filename)
+    executed_operations = filter_executed_operations(operations)
+    last_operations = get_last_n_operations(n, executed_operations)
+    for operation in last_operations:
+        print_operation(operation)
