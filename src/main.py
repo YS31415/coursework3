@@ -1,4 +1,5 @@
-from utils import end
 
-if __name__ == '__main__':
-    end()
+from src.utils import print_last_operations
+
+
+print_last_operations(5, 'operations.json')
